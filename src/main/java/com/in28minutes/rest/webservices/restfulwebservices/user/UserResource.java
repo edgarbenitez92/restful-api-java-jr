@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,15 +28,25 @@ public class UserResource {
 
 	@GetMapping("/user/{id}")
 	public User retrieveUserById(@PathVariable int id) {
-		return userService.getUserById(id);
+		User user = userService.getUserById(id);
+
+		if (user == null) {
+			throw new UserNotFoundException(String.format("Usuario con id %s no existe", id));
+		}
+
+		return user;
 	}
 
 	@PostMapping("/users")
 	public ResponseEntity<User> createUser(@RequestBody User user) {
 		User createdUser = userService.saveUser(user);
-		URI location = ServletUriComponentsBuilder
-							.fromCurrentContextPath().path("/user/{id}")
-							.buildAndExpand(createdUser.getId()).toUri();
+		URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/{id}")
+				.buildAndExpand(createdUser.getId()).toUri();
 		return ResponseEntity.created(location).build();
+	}
+	
+	@DeleteMapping("/user/{id}")
+	public void deleteUserById(@PathVariable int id) {
+		userService.deleteUserById(id);
 	}
 }
