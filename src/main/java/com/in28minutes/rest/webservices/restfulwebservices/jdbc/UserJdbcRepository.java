@@ -52,7 +52,6 @@ public class UserJdbcRepository {
 		GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
 		
 	    springJdbcTemplate.update(connection -> {
-	    	System.out.print(connection);
 	        PreparedStatement ps = connection.prepareStatement(CREATE_USER, Statement.RETURN_GENERATED_KEYS);
 	        ps.setString(1, user.getName());
 	        ps.setDate(2, Date.valueOf(user.getBirthDate()));
