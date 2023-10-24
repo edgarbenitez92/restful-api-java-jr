@@ -23,12 +23,9 @@ import jakarta.validation.Valid;
 
 @RestController
 public class UserJdbcResource {
-
-	private UserDaoService userService;
 	private UserJdbcRepository userRepository;
 
-	public UserJdbcResource(UserDaoService userService, UserJdbcRepository userRepository) {
-		this.userService = userService;
+	public UserJdbcResource(UserJdbcRepository userRepository) {
 		this.userRepository = userRepository;
 	}
 
@@ -66,5 +63,11 @@ public class UserJdbcResource {
 	@DeleteMapping("/jdbc/user/{id}")
 	public void deleteUserById(@PathVariable int id) {
 		userRepository.deleteUserById(id);
+	}
+
+	@GetMapping("/jdbc/user/{id}/posts")
+	public List<PostUser> retrievePostsForUser(@PathVariable int id) {
+		User user = userRepository.findUserWithPostsById(id);
+		return user.getPostsUser();
 	}
 }

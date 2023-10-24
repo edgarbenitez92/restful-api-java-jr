@@ -11,7 +11,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 
+import com.in28minutes.rest.webservices.restfulwebservices.user.PostUser;
 import com.in28minutes.rest.webservices.restfulwebservices.user.User;
+import com.in28minutes.rest.webservices.restfulwebservices.user.UserNotFoundException;
 
 @Repository
 public class UserJdbcRepository {
@@ -50,16 +52,39 @@ public class UserJdbcRepository {
 
 	public User createUser(User user) {
 		GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
-		
-	    springJdbcTemplate.update(connection -> {
-	        PreparedStatement ps = connection.prepareStatement(CREATE_USER, Statement.RETURN_GENERATED_KEYS);
-	        ps.setString(1, user.getName());
-	        ps.setDate(2, Date.valueOf(user.getBirthDate()));
-	        return ps;
-	    }, keyHolder);
 
-	    long generatedId = keyHolder.getKey().longValue();
+		springJdbcTemplate.update(connection -> {
+			PreparedStatement ps = connection.prepareStatement(CREATE_USER, Statement.RETURN_GENERATED_KEYS);
+			ps.setString(1, user.getName());
+			ps.setDate(2, Date.valueOf(user.getBirthDate()));
+			return ps;
+		}, keyHolder);
 
-	    return findUserById(generatedId);
+		long generatedId = keyHolder.getKey().longValue();
+
+		return findUserById(generatedId);
+	}
+
+	private static String FIND_POSTS_BY_USER_ID = """
+			SELECT p.id, p.description
+			FROM post p
+			WHERE p.user_id = ?;
+			""";
+
+	public List<PostUser> findPostsByUserId(long userId) {
+		return springJdbcTemplate.query(FIND_POSTS_BY_USER_ID, new BeanPropertyRowMapper<>(PostUser.class), userId);
+	}
+
+	public User findUserWithPostsById(long userId) {
+		User user = findUserById(userId);
+
+		if (user == null) {
+			throw new UserNotFoundException(String.format("Usuario con id %s no existe", userId));
+		}
+
+		List<PostUser> posts = findPostsByUserId(userId);
+		user.setPostsUser(posts);
+
+		return user;
 	}
 }

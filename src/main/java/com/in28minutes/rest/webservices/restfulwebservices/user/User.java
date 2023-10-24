@@ -70,4 +70,12 @@ public class User {
 		return "user [id=" + id + ", name=" + name + ", birthDate=" + birthDate + "]";
 	}
 
+	public List<PostUser> getPostsUser() {
+		return postsUser;
+	}
+
+	public void setPostsUser(List<PostUser> postsUser) {
+		this.postsUser = postsUser;
+	}
+
 }

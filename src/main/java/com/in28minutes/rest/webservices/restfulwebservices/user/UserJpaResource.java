@@ -24,11 +24,9 @@ import jakarta.validation.Valid;
 @RestController
 public class UserJpaResource {
 
-	private UserDaoService userService;
 	private UserJpaRepository userRepository;
 
-	public UserJpaResource(UserDaoService userService, UserJpaRepository userRepository) {
-		this.userService = userService;
+	public UserJpaResource(UserJpaRepository userRepository) {
 		this.userRepository = userRepository;
 	}
 
@@ -64,5 +62,17 @@ public class UserJpaResource {
 	@DeleteMapping("/jpa/user/{id}")
 	public void deleteUserById(@PathVariable int id) {
 		userRepository.deleteById(id);
+	}
+	
+	@GetMapping("/jpa/user/{id}/posts")
+	public List<PostUser> retrievePostsForUser(@PathVariable int id) {
+
+		Optional<User> user = userRepository.findById(id);
+
+		if (user.isEmpty()) {
+			throw new UserNotFoundException(String.format("Usuario con id %s no existe", id));
+		}
+		
+		return user.get().getPostsUser();
 	}
 }
