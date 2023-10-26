@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.in28minutes.rest.webservices.restfulwebservices.jdbc.PostJdbcRepository;
 import com.in28minutes.rest.webservices.restfulwebservices.jdbc.UserJdbcRepository;
 
 import jakarta.validation.Valid;
@@ -24,9 +25,11 @@ import jakarta.validation.Valid;
 @RestController
 public class UserJdbcResource {
 	private UserJdbcRepository userRepository;
+	private PostJdbcRepository postJdbcRepository;
 
-	public UserJdbcResource(UserJdbcRepository userRepository) {
+	public UserJdbcResource(UserJdbcRepository userRepository, PostJdbcRepository postJdbcRepository) {
 		this.userRepository = userRepository;
+		this.postJdbcRepository = postJdbcRepository;
 	}
 
 	@GetMapping("/jdbc/users")
@@ -69,5 +72,20 @@ public class UserJdbcResource {
 	public List<PostUser> retrievePostsForUser(@PathVariable int id) {
 		User user = userRepository.findUserWithPostsById(id);
 		return user.getPostsUser();
+	}
+
+	@PostMapping("/jdbc/user/{id}/posts")
+	public ResponseEntity<PostUser> createPostUser(@PathVariable int id, @Valid @RequestBody PostUser postUser) {
+		PostUser user = postJdbcRepository.createPostUser(postUser);
+
+		if (user == null) {
+			throw new UserNotFoundException(String.format("Usuario con id %s no existe", id));
+		}
+
+		PostUser createdPostUser = postJdbcRepository.createPostUser(postUser);
+
+		URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/{id}")
+				.buildAndExpand(createdPostUser.getId()).toUri();
+		return ResponseEntity.created(location).build();
 	}
 }

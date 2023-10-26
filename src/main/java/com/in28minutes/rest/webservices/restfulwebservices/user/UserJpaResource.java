@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.in28minutes.rest.webservices.restfulwebservices.jpa.PostJpaRepository;
 import com.in28minutes.rest.webservices.restfulwebservices.jpa.UserJpaRepository;
 
 import jakarta.validation.Valid;
@@ -25,9 +26,11 @@ import jakarta.validation.Valid;
 public class UserJpaResource {
 
 	private UserJpaRepository userRepository;
+	private PostJpaRepository postRepository;
 
-	public UserJpaResource(UserJpaRepository userRepository) {
+	public UserJpaResource(UserJpaRepository userRepository, PostJpaRepository postJpaRepository) {
 		this.userRepository = userRepository;
+		this.postRepository = postJpaRepository;
 	}
 
 	@GetMapping("/jpa/users")
@@ -63,7 +66,7 @@ public class UserJpaResource {
 	public void deleteUserById(@PathVariable int id) {
 		userRepository.deleteById(id);
 	}
-	
+
 	@GetMapping("/jpa/user/{id}/posts")
 	public List<PostUser> retrievePostsForUser(@PathVariable int id) {
 
@@ -72,7 +75,25 @@ public class UserJpaResource {
 		if (user.isEmpty()) {
 			throw new UserNotFoundException(String.format("Usuario con id %s no existe", id));
 		}
-		
+
 		return user.get().getPostsUser();
+	}
+
+	@PostMapping("/jpa/user/{id}/posts")
+	public ResponseEntity<Object> createPostForUser(@PathVariable int id, @RequestBody PostUser postUser) {
+
+		Optional<User> user = userRepository.findById(id);
+
+		if (user.isEmpty()) {
+			throw new UserNotFoundException(String.format("Usuario con id %s no existe", id));
+		}
+
+		postUser.setUser(user.get());
+		PostUser savedPost = postRepository.save(postUser);
+
+		URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/user/{id}").buildAndExpand(savedPost)
+				.toUri();
+
+		return ResponseEntity.created(location).build();
 	}
 }
